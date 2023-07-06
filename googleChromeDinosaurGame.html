@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dinosaur Game</title>
+    <style>
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script>
+      let dino;
+      let obstacles = [];
+      let score = 0;
+      let highScore = 0;
+      let gameSpeed = 6;
+      let isGameOver = false;
+      let gamePaused = false;
+
+      if (localStorage.getItem("highScore")) {
+        highScore = parseInt(localStorage.getItem("highScore"));
+      }
+
+      function setup() {
+        createCanvas(800, 300);
+        resetGame();
+      }
+
+      function resetGame() {
+        dino = new Dino();
+        obstacles = [];
+        score = 0;
+        gameSpeed = 6;
+        isGameOver = false;
+        gamePaused = false;
+      }
+
+      function draw() {
+        if (isGameOver) {
+          showGameOver();
+          return;
+        }
+
+        if (gamePaused) {
+          showGamePaused();
+          return;
+        }
+
+        background(255);
+
+        // Generate new obstacles
+        if (frameCount % 60 === 0) {
+          let obstacle = new Obstacle();
+          obstacles.push(obstacle);
+        }
+
+        // Update and display obstacles
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+          obstacles[i].update();
+          obstacles[i].show();
+
+          // Check collision with dino
+          if (obstacles[i].collidesWith(dino)) {
+            gameOver();
+            break;
+          }
+
+          // Remove obstacles that are offscreen
+          if (obstacles[i].offscreen()) {
+            obstacles.splice(i, 1);
+            score++;
+            gameSpeed += 0.2;
+          }
+        }
+
+        // Update and display dino
+        dino.update();
+        dino.show();
+
+        // Display score
+        textAlign(RIGHT);
+        textFont("Courier New");
+        textSize(20);
+        fill(0);
+        text("Score: " + score, width - 20, 30);
+        text("High Score: " + highScore, width - 20, 60);
+      }
+
+      function keyPressed() {
+        if (keyCode === 32) {
+          if (isGameOver) {
+            resetGame();
+          } else {
+            gamePaused = !gamePaused;
+          }
+        }
+        if (keyCode === UP_ARROW) {
+          dino.jump();
+        }
+      }
+
+      function gameOver() {
+        isGameOver = true;
+
+        // Update high score
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem("highScore", highScore);
+        }
+      }
+
+      function showGameOver() {
+        background(255);
+        textAlign(CENTER);
+        textFont("Courier New");
+        textSize(30);
+        fill(0);
+        text("☠️ Game Over", width / 2, height / 2 - 30);
+        textSize(20);
+        text("Press SPACE to play again", width / 2, height / 2 + 10);
+      }
+
+      function showGamePaused() {
+        background(255);
+        textAlign(CENTER);
+        textFont("Courier New");
+        textSize(30);
+        fill(0);
+        text("Game Paused", width / 2, height / 2 - 30);
+        textSize(20);
+        text("Press SPACE to resume", width / 2, height / 2 + 10);
+      }
+
+      class Dino {
+        constructor() {
+          this.x = 50;
+          this.y = height - 50;
+          this.width = 40;
+          this.height = 50;
+          this.velocityY = 0;
+          this.gravity = 1;
+          this.jumpForce = 15;
+        }
+
+        jump() {
+          if (this.y === height - this.height) {
+            this.velocityY = -this.jumpForce;
+          }
+        }
+
+        update() {
+          this.velocityY += this.gravity;
+          this.y += this.velocityY;
+
+          if (this.y > height - this.height) {
+            this.y = height - this.height;
+            this.velocityY = 0;
+          }
+        }
+
+        show() {
+          fill(0);
+          rect(this.x, this.y, this.width, this.height);
+        }
+      }
+
+      class Obstacle {
+        constructor() {
+          this.x = width;
+          this.width = 20;
+          this.height = random(20, 80);
+          this.velocityX = -gameSpeed;
+        }
+
+        update() {
+          this.x += this.velocityX;
+        }
+
+        show() {
+          fill(0);
+          rect(this.x, height - this.height, this.width, this.height);
+        }
+
+        collidesWith(dino) {
+          if (
+            this.x < dino.x + dino.width &&
+            this.x + this.width > dino.x &&
+            height - this.height < dino.y + dino.height &&
+            height - this.height + this.height > dino.y
+          ) {
+            return true;
+          }
+          return false;
+        }
+
+        offscreen() {
+          return this.x + this.width < 0;
+        }
+      }
+
+      // Run the game
+      new p5();
+    </script>
+  </body>
+</html>
