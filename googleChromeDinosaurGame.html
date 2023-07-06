@@ -109,10 +109,8 @@
       function gameOver() {
         isGameOver = true;
         updateHighScore();
-        addToScoreboard(
-          prompt("Enter your name (max 16 characters, no spaces):"),
-          score
-        );
+        let name = prompt("Enter your name (max 16 characters, no spaces):");
+        addToScoreboard(name, score);
       }
 
       function updateHighScore() {
@@ -146,12 +144,6 @@
         textSize(16);
         fill(0);
         let yPos = height / 2 + 60;
-        let playerPosition = scoreboard.findIndex(
-          (entry) => entry.score === score
-        );
-        if (playerPosition !== -1) {
-          scoreboard.splice(playerPosition, 0, { name, score });
-        }
         for (let i = 0; i < scoreboard.length; i++) {
           let entry = scoreboard[i];
           text(entry.name + ": " + entry.score, width / 2 - 40, yPos);
