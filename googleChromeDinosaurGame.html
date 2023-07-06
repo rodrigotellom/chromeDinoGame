@@ -169,6 +169,9 @@
         const apiUrl =
           "https://api.val.town/v1/run/rodrigotello.dinoGameScoreboard";
 
+        // Sort the scoreboard by score in descending order
+        scoreboard.sort((a, b) => b.score - a.score);
+
         // Display scoreboard
         textAlign(LEFT);
         textSize(16);
@@ -187,7 +190,7 @@
         textFont("Courier New");
         textSize(30);
         fill(0);
-        text("Game Paused", width / 2, height / 2 - 30);
+        text("⏸️ Game Paused", width / 2, height / 2 - 30);
         textSize(20);
         text("Press SPACE to resume", width / 2, height / 2 + 10);
       }
