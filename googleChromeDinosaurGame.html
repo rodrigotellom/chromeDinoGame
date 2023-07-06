@@ -21,16 +21,23 @@
       let gamePaused = false;
       let scoreboard = [];
 
-      if (localStorage.getItem("highScore")) {
-        highScore = parseInt(localStorage.getItem("highScore"));
-      }
-      if (localStorage.getItem("scoreboard")) {
-        scoreboard = JSON.parse(localStorage.getItem("scoreboard"));
-      }
-
       function setup() {
         createCanvas(800, 300);
         resetGame();
+
+        // Fetch the scoreboard data from the Val Town API
+        const apiUrl =
+          "https://api.val.town/v1/run/rodrigotello.dinoGameScoreboard";
+
+        fetch(apiUrl)
+          .then((response) => response.json())
+          .then((scoreboardData) => {
+            // Store the scoreboard data in the variable
+            scoreboard = scoreboardData.scores || [];
+          })
+          .catch((error) => {
+            console.error("Error fetching scoreboard data:", error);
+          });
       }
 
       function resetGame() {
@@ -91,6 +98,8 @@
         fill(0);
         text("Score: " + score, width - 20, 30);
         text("High Score: " + highScore, width - 20, 60);
+
+        console.log("Current Score:", score);
       }
 
       function keyPressed() {
@@ -108,25 +117,42 @@
 
       function gameOver() {
         isGameOver = true;
-        updateHighScore();
         let name = prompt("Enter your name (max 16 characters, no spaces):");
-        addToScoreboard(name, score);
-      }
-
-      function updateHighScore() {
-        if (score > highScore) {
-          highScore = score;
-          localStorage.setItem("highScore", highScore);
-        }
-      }
-
-      function addToScoreboard(name, score) {
+        // Update the local scoreboard variable
         scoreboard.push({ name, score });
-        scoreboard.sort((a, b) => b.score - a.score);
-        if (scoreboard.length > 10) {
-          scoreboard.pop();
-        }
-        localStorage.setItem("scoreboard", JSON.stringify(scoreboard));
+
+        // Call the function to update the scoreboard on the Val Town API
+        updateScoreboard(name, score);
+      }
+
+      function updateScoreboard(name, score) {
+        const apiUrl =
+          "https://api.val.town/v1/run/rodrigotello.updateDinoScoreboard";
+
+        fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            args: [
+              {
+                name,
+                score,
+                time: Date.now(),
+              },
+            ],
+          }),
+        })
+          .then((response) => response.json())
+          .then((result) => {
+            console.log("Scoreboard updated:", result);
+            // Update the scoreboard variable with the fetched data
+            scoreboard = result;
+          })
+          .catch((error) => {
+            console.error("Error updating scoreboard:", error);
+          });
       }
 
       function showGameOver() {
@@ -138,6 +164,10 @@
         text("☠️ Game Over", width / 2, height / 2 - 30);
         textSize(20);
         text("Press SPACE to play again", width / 2, height / 2 + 10);
+
+        // Fetch the latest scoreboard data
+        const apiUrl =
+          "https://api.val.town/v1/run/rodrigotello.dinoGameScoreboard";
 
         // Display scoreboard
         textAlign(LEFT);
