@@ -19,9 +19,13 @@
       let gameSpeed = 6;
       let isGameOver = false;
       let gamePaused = false;
+      let scoreboard = [];
 
       if (localStorage.getItem("highScore")) {
         highScore = parseInt(localStorage.getItem("highScore"));
+      }
+      if (localStorage.getItem("scoreboard")) {
+        scoreboard = JSON.parse(localStorage.getItem("scoreboard"));
       }
 
       function setup() {
@@ -104,12 +108,27 @@
 
       function gameOver() {
         isGameOver = true;
+        updateHighScore();
+        addToScoreboard(
+          prompt("Enter your name (max 16 characters, no spaces):"),
+          score
+        );
+      }
 
-        // Update high score
+      function updateHighScore() {
         if (score > highScore) {
           highScore = score;
           localStorage.setItem("highScore", highScore);
         }
+      }
+
+      function addToScoreboard(name, score) {
+        scoreboard.push({ name, score });
+        scoreboard.sort((a, b) => b.score - a.score);
+        if (scoreboard.length > 10) {
+          scoreboard.pop();
+        }
+        localStorage.setItem("scoreboard", JSON.stringify(scoreboard));
       }
 
       function showGameOver() {
@@ -121,6 +140,23 @@
         text("☠️ Game Over", width / 2, height / 2 - 30);
         textSize(20);
         text("Press SPACE to play again", width / 2, height / 2 + 10);
+
+        // Display scoreboard
+        textAlign(LEFT);
+        textSize(16);
+        fill(0);
+        let yPos = height / 2 + 60;
+        let playerPosition = scoreboard.findIndex(
+          (entry) => entry.score === score
+        );
+        if (playerPosition !== -1) {
+          scoreboard.splice(playerPosition, 0, { name, score });
+        }
+        for (let i = 0; i < scoreboard.length; i++) {
+          let entry = scoreboard[i];
+          text(entry.name + ": " + entry.score, width / 2 - 40, yPos);
+          yPos += 20;
+        }
       }
 
       function showGamePaused() {
